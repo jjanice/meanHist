@@ -59,9 +59,9 @@ def getData(statusLabel,progressBar,vidx, starttime, stoptime):
   if len(pvls[0])==0:
     print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...')
     return [], [], [], []
-  print(len(pvls))
+#  print(len(pvls))
   pvl=pvls[vidx]
-  print(len(pvl))
+#  print(len(pvl))
 #  try:
   progressBar.show()
   begin=datetime.datetime.now()
