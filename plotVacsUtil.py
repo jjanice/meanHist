@@ -25,13 +25,18 @@ from lcls_tools.data_analysis.archiver import Archiver, ArchiverData
 TIMERANGES=["last24h","last3days","last4days","last7days"]
 TIMEDAYS=[1,3,4,7]
 VACSYS=['Insulating','Scavenger','Coupler','Beamline']
+PLOTS=['Insul Vac', 'Scav Vac', 'Cplr Vac', 'Beamline Vac', 'US HOMs', 
+       'DS HOMs', 'STEPTEMPs', 'CPLRTEMP1s', 'CPLRTEMP2s', 'He Ves Temps',
+       'Line A','Line B1','Line B2','Line C','Line D','Line E',
+       'Line F','Shield','Liquid Levels','CM Pressures']
 # ==============================================================================
 # GETTERS
 # ==============================================================================
 
 def timeranges(): return TIMERANGES
 def timedays(): return TIMEDAYS
-def vacsyses(): return VACSYS
+#def vacsyses(): return VACSYS
+def vacsyses(): return PLOTS
 
 def getData(statusLabel,progressBar,vidx, starttime, stoptime):
 # inputs Qlabel to write status to, index for vac sys, 
@@ -39,10 +44,10 @@ def getData(statusLabel,progressBar,vidx, starttime, stoptime):
 # outputs means, stds, pvlist, and archiveData for vac sys
 #
 # initialize lists to receive PVs for vac systems
-  pvls=[[] for ii in range(4)]
+  pvls=[] #[] for ii in range(4)]
 # if vidx is too big, this won't end well.
-  if vidx>(len(pvls)-1):
-    return [],[],[]
+#  if vidx>(len(pvls)-1):
+#    return [],[],[]
 # initialize return variables
   alldata=[]
   means=[]
@@ -50,9 +55,15 @@ def getData(statusLabel,progressBar,vidx, starttime, stoptime):
   results={}
   archiver=Archiver("lcls")
 # these correspond to ins scav cplr and bl vac respectively
-  pvls[0],pvls[1],pvls[2],pvls[3] = createVacList()
+  pvls = createVacList()
+  if len(pvls[0])==0:
+    print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...')
+    return [], [], [], []
+  print(len(pvls))
   pvl=pvls[vidx]
+  print(len(pvl))
 #  try:
+  progressBar.show()
   begin=datetime.datetime.now()
   for id,pv in enumerate(pvl):
     try:

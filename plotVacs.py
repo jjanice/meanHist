@@ -57,7 +57,20 @@ class MyDisplay(Display):
 # empty the status text area
     self.ui.StatusLabel.setText("")
 
+# hide the progress bar until needed
+    self.ui.progressBar.hide()
+
   def Go(self):
+    tidx = self.ui.TimeComboBox.currentIndex()
+#    print(self.tranges[tidx])
+    stoptime=datetime.datetime.now()
+    starttime=stoptime-datetime.timedelta(days=self.tdays[tidx])
+
+    vidx = self.ui.SysComboBox.currentIndex()
+#    print(self.vacsyses[vidx])
+    means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
+                           self.ui.progressBar,vidx,starttime,stoptime)
+    self.ui.progressBar.hide()
     if type(self.ax)!=int:
       self.figure.delaxes(self.ax)
       self.canvas.draw()
@@ -68,19 +81,21 @@ class MyDisplay(Display):
 #    print(type(self.ax))
     self.ax2=self.figure.add_subplot(2,1,2)
     self.ax.clear()
-    tidx = self.ui.TimeComboBox.currentIndex()
-#    print(self.tranges[tidx])
-    stoptime=datetime.datetime.now()
-    starttime=stoptime-datetime.timedelta(days=self.tdays[tidx])
-
-    vidx = self.ui.SysComboBox.currentIndex()
-#    print(self.vacsyses[vidx])
-    means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
-                              self.ui.progressBar,vidx,starttime,stoptime)
+    if means==[]:
+      print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, etc')
+      errmsg='Use on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...'
+      self.ax.set_title(errmsg,loc='left',y=.85,x=.02,fontsize='small')
+      self.ax.plot([1,2,3],'bo')
+      self.canvas.draw()
+      return
     self.ax.errorbar(range(len(means)),means,yerr=stds,
                 ls='none',ecolor='black',elinewidth=0.5)
-    self.ax.semilogy(means,'bo')
+    if vidx<4:
+      self.ax.semilogy(means,'bo')
+    else:
+      self.ax.plot(means,'bo')
     self.ax.grid()
+    self.ax.set_title(self.vacsyses[vidx],loc='left',y=.85,x=.02,fontsize='small')
     self.canvas.draw()
     def onclick(event):
 #       print('%s click: button %d, x %d y %d xdata %f ydata %e' %
@@ -94,7 +109,10 @@ class MyDisplay(Display):
          valus=archiveData[pvl[idx]]["values"]
          if len([x for x in valus if x>=0])>1:
            titlet=pvl[idx]
-           self.ax2.semilogy(timi,valus)
+           if vidx<4:
+             self.ax2.semilogy(timi,valus)
+           else:
+             self.ax2.plot(timi,valus)
            self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
            self.ax2.xaxis.set_major_formatter(
              mdates.ConciseDateFormatter(self.ax2.xaxis.get_major_locator()))

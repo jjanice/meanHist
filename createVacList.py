@@ -1,9 +1,14 @@
+import os
 import meme.names
+
 def createVacList():
   # creates a list of vacuum pvs in areas L0B-SPH/D/S
   # sorted by z and divided by category:
   #   insulating, scavenger pump, coupler, and beamline respectively.
   # return pvins, pvscav, pvcplr, pvbl
+
+  #  need to be on a machine with mcc-dmz in EPICS_CA_ADDR_LIST for 
+  #  meme.names to work
 
   #these will be lists of pvs for vac devices in the following systems:
   #   coupler, beamline, insulating, and scavenger pump, respectively.
@@ -11,6 +16,12 @@ def createVacList():
   pvbl=[]
   pvins=[]
   pvscav=[]
+  pvls=[]
+
+  caAddrList=os.environ['EPICS_CA_ADDR_LIST']
+  if 'mcc-dmz' not in caAddrList:
+    print('Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc)')
+    return [], [], [], []
 
   areas=['L0B','HTR','COL0','DIAG0','L1B','BC1B','COL1','L2B','BC2B','EMIT2',
   'L3B','EXT','DOG']
@@ -78,5 +89,30 @@ def createVacList():
           pvbl.append(pv)
       else:
         pvbl.append(pv)
-  return pvins, pvscav, pvcplr, pvbl
+
+  # Packup return variable
+  pvls.append(pvins)
+  pvls.append(pvscav)
+  pvls.append(pvcplr)
+  pvls.append(pvbl)
+
+# CRYO
+  pvls.append(meme.names.list_pvs('CTE:%:UH:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:DH:TEMP'))
+  pvls.append(meme.names.list_pvs('ACCL:%:%:STEPTEMP'))
+  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP1'))
+  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP2'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:V%:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:A1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:B1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:B2:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:C1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:D1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:E1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:F1:TEMP'))
+  pvls.append(meme.names.list_pvs('CTE:%:%:S1:TEMP'))
+  pvls.append(meme.names.list_pvs('CLL:CM%:%:%:LVL'))
+  pvls.append(meme.names.list_pvs('CPT:CM%:%:%S:PRESS'))
+
+  return pvls
 
