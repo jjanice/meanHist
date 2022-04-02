@@ -1,20 +1,21 @@
 # 
-# plotVacs
+# meanHist
 # J. Nelson
-# 26 March 2022
+# 2 Apr 2022
 #
-# pydm class to go with plotVacs.ui
+# pydm class to go with meanHist.ui
 #
 # This loads up the time frame combo boxes on the ui then
-# when Go! is pushed, it reads out the box and
-# figures out the tab then makes a plot
+# when Go! is pushed, it reads out what type of plot to make,
+# fetches the data, then plots means & stds in the top subplot. If someone
+# clicks a data point, it draws the history in the bottom subplot.
 #
 
 import time
 from os import path, system
 from pydm import Display
 import datetime
-import plotVacsUtil as util
+import meanHistUtil as util
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
@@ -24,70 +25,88 @@ class MyDisplay(Display):
   def __init__(self, parent=None, args=None, macros=None):
     super(MyDisplay, self).__init__(parent=parent, args=args, macros=macros)
 
-# Get variables from utility file
+    # Get variables from utility file
     self.tranges = util.timeranges()
     self.tdays = util.timedays()
-    self.vacsyses = util.vacsyses()
+    self.plots = util.plots()
 
-# initialize matplotlib click connections
+    # initialize matplotlib click connections
     self.ax=0
     self.ax2=0
 
-# connect spinner boxes to functions
+    # connect spinner boxes to functions - these are passes for now
     self.ui.TimeComboBox.activated.connect(self.ChangeTime)
     self.ui.SysComboBox.activated.connect(self.ChangeSys)
-#Fill in ui components
-    self.ui.progressBar.setValue(0)
-# vacuum system selector
-    for vacsys in self.vacsyses:
-      self.ui.SysComboBox.addItem(vacsys)
 
-# time range selector
+    #Fill in ui components
+    self.ui.progressBar.setValue(0)
+
+    # system-to-plot selector
+    for plotsys in self.plots:
+      self.ui.SysComboBox.addItem(plotsys)
+
+    # time range selector
     for trange in self.tranges:
       self.ui.TimeComboBox.addItem(trange)
 
-# put a plot in the gridlayout
+    # put a canvas for the plot in the gridlayout
     self.figure=Figure()
     self.canvas=FigureCanvas(self.figure)
     self.ui.PlotArea.addWidget(self.canvas)
 
-# Connect go button to function
+    # Connect go & print buttons to functions
     self.ui.GoButton.clicked.connect(self.Go)
     self.ui.printPushButton.clicked.connect(self.printPlot)
 
-# empty the status text area
+    # empty the status text area
     self.ui.StatusLabel.setText("")
 
-# hide the progress bar until needed
+    # hide the progress bar until needed
     self.ui.progressBar.hide()
 #    self.ui.printPushButton.hide()
 
   def printPlot(self):
-    self.figure.savefig('plotVacs.ps')
-    cmd='lpr -Pphysics-lcls2log plotVacs.ps'
+    self.figure.savefig('meanHist.ps')
+    cmd='lpr -Pphysics-lcls2log meanHist.ps'
     system(cmd)
 
   def Go(self):
+  # function to respond to go button push
+  # fetches data for the pvs requested over requested time range
+  #  and plots means & stds in top plot
+  #  and responds to mouse click in top plot to draw bottom plot
+  #  with that dot's data (that went into calculating the mean & std
+
+    # time range requested?
     tidx = self.ui.TimeComboBox.currentIndex()
-#    print(self.tranges[tidx])
     stoptime=datetime.datetime.now()
     starttime=stoptime-datetime.timedelta(days=self.tdays[tidx])
 
-    vidx = self.ui.SysComboBox.currentIndex()
-#    print(self.vacsyses[vidx])
+    # which set of pvs to plot (plot index)
+    pidx = self.ui.SysComboBox.currentIndex()
+
+    # get the data
     means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
-                           self.ui.progressBar,vidx,starttime,stoptime)
+                           self.ui.progressBar,pidx,starttime,stoptime)
     self.ui.progressBar.hide()
+
+    # The program starts with axes set to ints so we can tell if
+    #  something has been drawn before and if so to delete it before
+    #  plotting new data
     if type(self.ax)!=int:
       self.figure.delaxes(self.ax)
       self.canvas.draw()
     if type(self.ax2)!=int:
       self.figure.delaxes(self.ax2)
       self.canvas.draw()
+
+    # add top and bottom plots/axes
     self.ax=self.figure.add_subplot(2,1,1)
-#    print(type(self.ax))
     self.ax2=self.figure.add_subplot(2,1,2)
     self.ax.clear()
+
+    # if get data fails, it sends back and empty means array - usually means
+    #  user is not a machine with access to the archiver, thus the error message
     if means==[]:
       print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, etc')
       errmsg='Use on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...'
@@ -95,34 +114,59 @@ class MyDisplay(Display):
       self.ax.plot([1,2,3],'bo')
       self.canvas.draw()
       return
+    # plot means & stds
     self.ax.errorbar(range(len(means)),means,yerr=stds,
                 ls='none',ecolor='black',elinewidth=0.5)
-    if vidx<4:
+
+    # the first 4 plots-types are vacuum so use semilog to plot the means
+    #  otherwise just straight up plot
+    if pidx<4:
       self.ax.semilogy(means,'bo')
     else:
       self.ax.plot(means,'bo')
+    # add a grid title, draw the canvas, and make sure the 
+    #  printPushButton is showing
     self.ax.grid()
-    self.ax.set_title(self.vacsyses[vidx],loc='left',y=.85,x=.02,fontsize='small')
+    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
     self.canvas.draw()
     self.ui.printPushButton.show()
 
     def onclick(event):
+    # This function responds if user clicks somewhere on the upper plot
+    #  and draws the archived data for that PV in the lower plot
+#
 #       print('%s click: button %d, x %d y %d xdata %f ydata %e' %
 #             ('double' if event.dblclick else 'single', event.button,
 #              event.x, event.y, event.xdata, event.ydata))
        self.ax2.clear()
        self.ax2.grid()
+       # get index of click
        idx=round(event.xdata)
+
+       # on the odd chance the click response is weird make sure 
+       #  it's within the number of PVs we fetched
        if idx<len(pvl):
          timi=archiveData[pvl[idx]]["times"]
          valus=archiveData[pvl[idx]]["values"]
-         if len([x for x in valus if x>=0])>1:
-           titlet=pvl[idx]
-           if vidx<4:
+
+         # yes we want to plot this vacuum data - there's more than 
+         #  one positive value find number of positive points
+         npos=len([x for x in valus if x>=0])
+
+         # if it's a vacuum plot without at least one
+         #  positive point do nothing
+         if pidx<4 and npos<1:
+           pass
+         # otherwise plot as semilog (vacuum pidx<4) or normal
+         else:
+           if pidx<4:
              self.ax2.semilogy(timi,valus)
            else:
              self.ax2.plot(timi,valus)
+           titlet=pvl[idx]
            self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
+
+           # This makes for pretty dates on the x-axis
            self.ax2.xaxis.set_major_formatter(
              mdates.ConciseDateFormatter(self.ax2.xaxis.get_major_locator()))
            self.canvas.draw()
@@ -140,10 +184,8 @@ class MyDisplay(Display):
     pass
 
   def ui_filename(self):
-    return 'plotVacs.ui'
+    return 'meanHist.ui'
 
   def ui_filepath(self):
     return path.join(path.dirname(path.realpath(__file__)), self.ui_filename())
 
-#  def getData(vidx,starttime,stoptime):
-    

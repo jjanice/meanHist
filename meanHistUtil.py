@@ -1,14 +1,14 @@
 """
 ================================================================================
-plotVacs utilities
+meanHist utilities
 
-list variables needed by plotVacs
-Most stolen from CMIM's Utility.py - thanks, Zack!
-Also getData which returns means, stds, and archive data for a selected vac sys
-J Nelson 3/26/2022
+make pv lists needed by meanHist
+Some stolen from CMIM's Utility.py - thanks, Zack!
+Also getData which returns means, stds, and archive data for a selected group of signals
+J Nelson 2 April 2022
 ================================================================================
 """
-from createVacList import createVacList
+from createPVList import createPVList
 import meme.archive
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,9 +22,8 @@ from lcls_tools.data_analysis.archiver import Archiver, ArchiverData
 
 #TIMERANGES=["last24h","last3days","last4days","last7days","last2weeks","lastmonth"]
 #TIMEDAYS=[1 3 4 7 14 30]
-TIMERANGES=["last24h","last3days","last4days","last7days"]
-TIMEDAYS=[1,3,4,7]
-VACSYS=['Insulating','Scavenger','Coupler','Beamline']
+TIMERANGES=["last24h","last3days","last4days","last7days","last1h"]
+TIMEDAYS=[1,3,4,7,0.05]
 PLOTS=['Insul Vac', 'Scav Vac', 'Cplr Vac', 'Beamline Vac', 'US HOMs', 
        'DS HOMs', 'STEPTEMPs', 'CPLRTEMP1s', 'CPLRTEMP2s', 'He Ves Temps',
        'Line A','Line B1','Line B2','Line C','Line D','Line E',
@@ -35,37 +34,45 @@ PLOTS=['Insul Vac', 'Scav Vac', 'Cplr Vac', 'Beamline Vac', 'US HOMs',
 
 def timeranges(): return TIMERANGES
 def timedays(): return TIMEDAYS
-#def vacsyses(): return VACSYS
-def vacsyses(): return PLOTS
+def plots(): return PLOTS
 
-def getData(statusLabel,progressBar,vidx, starttime, stoptime):
-# inputs Qlabel to write status to, index for vac sys, 
-#  start and stop times in datetimes for archiver data pull
-# outputs means, stds, pvlist, and archiveData for vac sys
-#
-# initialize lists to receive PVs for vac systems
-  pvls=[] #[] for ii in range(4)]
-# if vidx is too big, this won't end well.
-#  if vidx>(len(pvls)-1):
-#    return [],[],[]
-# initialize return variables
+def getData(statusLabel,progressBar,pidx, starttime, stoptime):
+  # inputs Qlabel to write status to, index for which plot to make, 
+  #  start and stop times in datetimes for archiver data pull
+  # outputs means, stds, pvlist, and archiveData for vac sys
+  #
+
+  # initialize lists to receive PVs for what to plot
+  pvls=[] 
   alldata=[]
   means=[]
   stds=[]
   results={}
+
+  # Initialize archiver class
   archiver=Archiver("lcls")
-# these correspond to ins scav cplr and bl vac respectively
-  pvls = createVacList()
+
+#TODO would be better to do this once and store in self.
+  # call createPVList() to make ALL the PV lists for ALL the plots
+  pvls = createPVList()
+
+  # createPVlist uses meme.names which needs to be called from a 
+  #  machine on the mccdmz
   if len(pvls[0])==0:
     print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...')
     return [], [], [], []
-#  print(len(pvls))
-  pvl=pvls[vidx]
-#  print(len(pvl))
-#  try:
+  pvl=pvls[pidx]
+
+  # show progress bar and warn user
   progressBar.show()
+  statusLabel.setText("Fetching {} PVs.".format(len(pvl)))
+  #statusLabel.repaint()
+
+  # save start time to report later
   begin=datetime.datetime.now()
   for id,pv in enumerate(pvl):
+  # for each pv get archived data from start to stop and store in results[]
+  # use id to draw progressBar
     try:
       onedata=archiver.getValuesOverTimeRange([pv],starttime,stoptime)
       result={"times":[],"values":[]}
@@ -73,16 +80,20 @@ def getData(statusLabel,progressBar,vidx, starttime, stoptime):
       result["times"]=onedata.timeStamps[pv]
       results[pv]=result
       progressBar.setValue(round(100*id/len(pvl)))
+    # Sometimes archiver barfs, put in empty lists
     except:
       result={"times":[],"values":[]}
       results[pv]=result
+  # Get finish time and report to user how it went - either in window (debug)
+  #  or on statusLabel on GUI
   donetime=datetime.datetime.now()
   if statusLabel == None:
     print("Data is fetched. Elapsed time: {} seconds".format((donetime-begin).total_seconds()))
   else:
     statusLabel.setText("Fetched {0} pvs in {1} seconds".format( len(pvl),
                                                                (donetime-begin).total_seconds()))
-
+  # Hey! We got something!
+  # Calculate and gather up means and stds
   if len(results)>0:
     for pv in pvl:
       if len(results[pv]['values'])>1:
@@ -91,8 +102,8 @@ def getData(statusLabel,progressBar,vidx, starttime, stoptime):
       else:
         means.append(0)
         stds.append(0)
-
+  # We're done!
   progressBar.setValue(100)
 
-  return means, stds, pvl, results # alldata
+  return means, stds, pvl, results
 
