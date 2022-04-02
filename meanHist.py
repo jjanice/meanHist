@@ -12,14 +12,16 @@
 #
 
 import time
-from os import path, system
+from os import path, system, environ
 from pydm import Display
 import datetime
+# util functions for this class
 import meanHistUtil as util
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.dates as mdates
-from functools import partial
+# function to create the list of PV lists
+from createPVList import createPVList
 
 class MyDisplay(Display):
   def __init__(self, parent=None, args=None, macros=None):
@@ -65,6 +67,19 @@ class MyDisplay(Display):
     self.ui.progressBar.hide()
 #    self.ui.printPushButton.hide()
 
+    # need to be on a machine on the mccdmz to use meme.names & get
+    #  archiver data
+    caAddrList=environ['EPICS_CA_ADDR_LIST']
+    if 'mcc-dmz' not in caAddrList:
+      print('Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc)')
+      self.ui.StatusLabel.setStyleSheet("color: red;")
+      self.ui.StatusLabel.setText("Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc")
+
+      # get the list of pv lists for the types of plots
+      self.pvls=[]
+    else:
+      self.pvls=createPVList()
+
   def printPlot(self):
     self.figure.savefig('meanHist.ps')
     cmd='lpr -Pphysics-lcls2log meanHist.ps'
@@ -85,9 +100,22 @@ class MyDisplay(Display):
     # which set of pvs to plot (plot index)
     pidx = self.ui.SysComboBox.currentIndex()
 
-    # get the data
-    means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
-                           self.ui.progressBar,pidx,starttime,stoptime)
+    # if on a dmz machine, get the data - pass in statuslabel to 
+    #  pass messages, progress bar to show progress, list of pvs to get,
+    #  and start/stop times for fetching the data
+
+    # Not on a dmz machine
+    if self.pvls==[]:
+      means=[]
+      stds=[]
+      pvl=[]
+      archiveData=[]
+    # Yay! dmz machine!
+    else:
+      means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
+                                                 self.ui.progressBar,
+                                                 self.pvls[pidx],
+                                                 starttime,stoptime)
     self.ui.progressBar.hide()
 
     # The program starts with axes set to ints so we can tell if
@@ -127,7 +155,8 @@ class MyDisplay(Display):
     # add a grid title, draw the canvas, and make sure the 
     #  printPushButton is showing
     self.ax.grid()
-    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
+#    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
+    self.ax.set_title(self.plots[pidx],loc='left',fontsize='small')
     self.canvas.draw()
     self.ui.printPushButton.show()
 
@@ -140,7 +169,7 @@ class MyDisplay(Display):
 #              event.x, event.y, event.xdata, event.ydata))
        self.ax2.clear()
        self.ax2.grid()
-       # get index of click
+       # get index (x position) of click
        idx=round(event.xdata)
 
        # on the odd chance the click response is weird make sure 
@@ -149,27 +178,34 @@ class MyDisplay(Display):
          timi=archiveData[pvl[idx]]["times"]
          valus=archiveData[pvl[idx]]["values"]
 
-         # yes we want to plot this vacuum data - there's more than 
+         # yes we want to plot this vacuum data if there's more than 
          #  one positive value find number of positive points
-         npos=len([x for x in valus if x>=0])
+         npos=len([x for x in valus if x>0])
 
          # if it's a vacuum plot without at least one
          #  positive point do nothing
-         if pidx<4 and npos<1:
-           pass
          # otherwise plot as semilog (vacuum pidx<4) or normal
+         if pidx<4 and npos<1:
+           titlet='No positive values to plot on log scale'
+           self.ax2.set_title(titlet,loc='left',y=.85,x=.02)
+           dataPlotted=0
+         elif pidx<4:
+           self.ax2.semilogy(timi,valus)
+           dataPlotted=1
          else:
-           if pidx<4:
-             self.ax2.semilogy(timi,valus)
-           else:
-             self.ax2.plot(timi,valus)
-           titlet=pvl[idx]
-           self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
+           self.ax2.plot(timi,valus)
+           dataPlotted=1
 
+         # set x label as pv name
+         xlabelt=pvl[idx]
+#           self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
+         self.ax2.set_xlabel(xlabelt,fontsize='small')
+
+         if dataPlotted:
            # This makes for pretty dates on the x-axis
            self.ax2.xaxis.set_major_formatter(
              mdates.ConciseDateFormatter(self.ax2.xaxis.get_major_locator()))
-           self.canvas.draw()
+         self.canvas.draw()
 
     cid=self.canvas.mpl_connect('button_press_event',onclick)
 

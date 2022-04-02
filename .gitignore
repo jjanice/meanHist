@@ -1,3 +1,4 @@
+*.ps
 *~
 extras/
 __pycache__/

@@ -8,10 +8,7 @@ Also getData which returns means, stds, and archive data for a selected group of
 J Nelson 2 April 2022
 ================================================================================
 """
-from createPVList import createPVList
-import meme.archive
 import numpy as np
-import matplotlib.pyplot as plt
 import datetime
 import matplotlib.dates as mdates
 from lcls_tools.data_analysis.archiver import Archiver, ArchiverData
@@ -36,14 +33,13 @@ def timeranges(): return TIMERANGES
 def timedays(): return TIMEDAYS
 def plots(): return PLOTS
 
-def getData(statusLabel,progressBar,pidx, starttime, stoptime):
-  # inputs Qlabel to write status to, index for which plot to make, 
+def getData(statusLabel, progressBar, pvl, starttime, stoptime):
+  # inputs Qlabel to write status to, list of PVs to fetch, 
   #  start and stop times in datetimes for archiver data pull
   # outputs means, stds, pvlist, and archiveData for vac sys
   #
 
   # initialize lists to receive PVs for what to plot
-  pvls=[] 
   alldata=[]
   means=[]
   stds=[]
@@ -52,16 +48,9 @@ def getData(statusLabel,progressBar,pidx, starttime, stoptime):
   # Initialize archiver class
   archiver=Archiver("lcls")
 
-#TODO would be better to do this once and store in self.
-  # call createPVList() to make ALL the PV lists for ALL the plots
-  pvls = createPVList()
-
-  # createPVlist uses meme.names which needs to be called from a 
-  #  machine on the mccdmz
-  if len(pvls[0])==0:
-    print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...')
+  if len(pvl)==0:
+    print('Need a list of PVs to fetch data for')
     return [], [], [], []
-  pvl=pvls[pidx]
 
   # show progress bar and warn user
   progressBar.show()

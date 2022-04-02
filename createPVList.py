@@ -21,10 +21,11 @@ def createPVList():
   pvscav=[]
   pvls=[]
 
+  # Double check that we're on the dmz network
   caAddrList=os.environ['EPICS_CA_ADDR_LIST']
   if 'mcc-dmz' not in caAddrList:
     print('Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc)')
-    return [], [], [], []
+    return []
 
   # this is the 2nd part of the PV name in rough Z order (thanks DIAG0!)
   areas=['L0B','HTR','COL0','DIAG0','L1B','BC1B','COL1','L2B','BC2B','EMIT2',
