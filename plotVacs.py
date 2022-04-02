@@ -53,12 +53,19 @@ class MyDisplay(Display):
 
 # Connect go button to function
     self.ui.GoButton.clicked.connect(self.Go)
+    self.ui.printPushButton.clicked.connect(self.printPlot)
 
 # empty the status text area
     self.ui.StatusLabel.setText("")
 
 # hide the progress bar until needed
     self.ui.progressBar.hide()
+#    self.ui.printPushButton.hide()
+
+  def printPlot(self):
+    self.figure.savefig('plotVacs.ps')
+    cmd='lpr -Pphysics-lcls2log plotVacs.ps'
+    system(cmd)
 
   def Go(self):
     tidx = self.ui.TimeComboBox.currentIndex()
@@ -97,6 +104,8 @@ class MyDisplay(Display):
     self.ax.grid()
     self.ax.set_title(self.vacsyses[vidx],loc='left',y=.85,x=.02,fontsize='small')
     self.canvas.draw()
+    self.ui.printPushButton.show()
+
     def onclick(event):
 #       print('%s click: button %d, x %d y %d xdata %f ydata %e' %
 #             ('double' if event.dblclick else 'single', event.button,

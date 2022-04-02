@@ -44,6 +44,9 @@ def createVacList():
           if 'VGCC' in pv or 'VGPR' in pv:
             if pv[4:]==pvxx[4:]:
               pvl[idpv]=''
+    # VGXX:L2B:1449 doesn't exist
+    if area=='L2B':
+      pvl.remove('VGXX:L2B:1449:P')
     # remove empty strings
     pvl=list(filter(None,pvl))
 
