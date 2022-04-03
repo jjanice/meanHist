@@ -198,5 +198,9 @@ def createPVList():
   juicyBits.append(1)
   yLabels.append('Two-phase line pressure (bara)')
 
+  pvls.append(meme.names.list_pvs('CHTR:%:%:HV:POWER_RBV'))
+  juicyBits.append(1)
+  yLabels.append('Heater Power (Watts)')
+
   return pvls, juicyBits, yLabels
 
