@@ -11,6 +11,16 @@ def createPVList():
   #  need to be on a machine with mcc-dmz in EPICS_CA_ADDR_LIST for 
   #  meme.names to work
 
+  # Going to double up the duty here and have it pass back a list of 
+  #  which is the interesting parts of the pv name 
+  #  for the xaxis named juicyBits
+  #  If juicyBits = 1, then just use the 2nd field of PVN, if it's 2
+  #  then use the 2nd and 3rd fields
+  #  with apologies to anyone trying to read this.
+
+  # Triple duty...
+  #  Add ylabel for that plot type
+
   # Start with the vacuum lists
 
   #these will be lists of pvs for vac devices in the following systems:
@@ -20,6 +30,8 @@ def createPVList():
   pvins=[]
   pvscav=[]
   pvls=[]
+  juicyBits=[]
+  yLabels=[]
 
   # Double check that we're on the dmz network
   caAddrList=os.environ['EPICS_CA_ADDR_LIST']
@@ -104,29 +116,87 @@ def createPVList():
       else:
         pvbl.append(pv)
 
-  # Packup return variable
+  # Packup return variables
   pvls.append(pvins)
+  juicyBits.append(2)
+  yLabels.append('Pressure (Torr)')
+
   pvls.append(pvscav)
+  juicyBits.append(2)
+  yLabels.append('Pressure (Torr)')
+
   pvls.append(pvcplr)
+  juicyBits.append(2)
+  yLabels.append('Pressure (Torr)')
+
   pvls.append(pvbl)
+  juicyBits.append(2)
+  yLabels.append('Pressure (Torr)')
 
 # CRYO - so much easier than vacuum...
   pvls.append(meme.names.list_pvs('CTE:%:UH:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:DH:TEMP'))
-  pvls.append(meme.names.list_pvs('ACCL:%:%:STEPTEMP'))
-  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP1'))
-  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP2'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:V%:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:A1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:B1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:B2:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:C1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:D1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:E1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:F1:TEMP'))
-  pvls.append(meme.names.list_pvs('CTE:%:%:S1:TEMP'))
-  pvls.append(meme.names.list_pvs('CLL:CM%:%:%:LVL'))
-  pvls.append(meme.names.list_pvs('CPT:CM%:%:%S:PRESS'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
 
-  return pvls
+  pvls.append(meme.names.list_pvs('CTE:%:DH:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('ACCL:%:%:STEPTEMP'))
+  juicyBits.append(2)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP1'))
+  juicyBits.append(2)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP2'))
+  juicyBits.append(2)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:V%:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:A1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:B1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:B2:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:C1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:D1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:E1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:F1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:%:S1:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CLL:CM%:%:%:LVL'))
+  juicyBits.append(1)
+  yLabels.append('Liquid Level (%)')
+
+  pvls.append(meme.names.list_pvs('CPT:CM%:%:%S:PRESS'))
+  juicyBits.append(1)
+  yLabels.append('Two-phase line pressure (bara)')
+
+  return pvls, juicyBits, yLabels
 

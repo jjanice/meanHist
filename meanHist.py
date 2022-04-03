@@ -19,6 +19,7 @@ import datetime
 import meanHistUtil as util
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 # function to create the list of PV lists
 from createPVList import createPVList
@@ -75,10 +76,12 @@ class MyDisplay(Display):
       self.ui.StatusLabel.setStyleSheet("color: red;")
       self.ui.StatusLabel.setText("Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc")
 
-      # get the list of pv lists for the types of plots
+      # set the list of pv lists for the types of plots
       self.pvls=[]
     else:
-      self.pvls=createPVList()
+      # get the list of pv lists for the types of plots and which 
+      #  part(s) of the pv name to use for x tick labels
+      self.pvls,self.juicyBits,self.yLabels=createPVList()
 
   def printPlot(self):
     self.figure.savefig('meanHist.ps')
@@ -149,14 +152,56 @@ class MyDisplay(Display):
     # the first 4 plots-types are vacuum so use semilog to plot the means
     #  otherwise just straight up plot
     if pidx<4:
-      self.ax.semilogy(means,'bo')
+      self.ax.semilogy(means,'o',color='tab:blue')
     else:
-      self.ax.plot(means,'bo')
+      self.ax.plot(means,'o',color='tab:blue')
+    #  Other color choices matplotlib.org/3.5.0/gallery/color/named_colors.html
+
     # add a grid title, draw the canvas, and make sure the 
     #  printPushButton is showing
     self.ax.grid()
 #    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
     self.ax.set_title(self.plots[pidx],loc='left',fontsize='small')
+
+    # <xTickShenanigans>
+    # limit plot to only 5 ticks - need room for pv names
+    self.ax.xaxis.set_major_locator(plt.MaxNLocator(5))
+    # get xtick locations - this returns a numpy array
+    tickSpots=self.ax.get_xticks().tolist()
+    # try to silence a warning, skip first and last
+    self.ax.xaxis.set_ticks(tickSpots[1:-1])
+    # ignore the first and last, for the ones in between check that the value
+    #  is an int, and if it's less than length of pvlist, use middle two
+    #   chunks of PV name as label
+#    xTickLabels=['']
+    xTickLabels=[]
+    for val in tickSpots[1:-1]:
+      if val.is_integer():
+        if int(val)<len(self.pvls[pidx]):
+          if self.juicyBits[pidx]==2:
+            # get the two middle chunks of pv name
+            pvnParts=self.pvls[pidx][int(val)].split(':')[1:3]
+            # rejoin them with a : if there's more than one
+            pvn=':'.join(pvnParts)
+          else:
+            # use just the 2nd chunk (juicyBits[pidx] should ==1
+            pvn=self.pvls[pidx][int(val)].split(':')[1]
+          xTickLabels.append(pvn)
+        else:
+          print('valstr {}'.format(val))
+          xTickLabels.append('')
+      else:
+        print('valstr {}'.format(val))
+        xTickLabels.append('')
+    # don't forget to set the last one to '' too
+#    xTickLabels.append('')
+    # actually set the xticklabels now
+    self.ax.set_xticklabels(xTickLabels)
+    #</xTickShenanigans>
+
+    # set y axis labels too
+    self.ax.set_ylabel(self.yLabels[pidx])
+
     self.canvas.draw()
     self.ui.printPushButton.show()
 
@@ -190,10 +235,10 @@ class MyDisplay(Display):
            self.ax2.set_title(titlet,loc='left',y=.85,x=.02)
            dataPlotted=0
          elif pidx<4:
-           self.ax2.semilogy(timi,valus)
+           self.ax2.semilogy(timi,valus,color='tab:blue')
            dataPlotted=1
          else:
-           self.ax2.plot(timi,valus)
+           self.ax2.plot(timi,valus,color='tab:blue')
            dataPlotted=1
 
          # set x label as pv name
@@ -205,6 +250,10 @@ class MyDisplay(Display):
            # This makes for pretty dates on the x-axis
            self.ax2.xaxis.set_major_formatter(
              mdates.ConciseDateFormatter(self.ax2.xaxis.get_major_locator()))
+
+         # set y axis labels too
+         self.ax2.set_ylabel(self.yLabels[pidx])
+
          self.canvas.draw()
 
     cid=self.canvas.mpl_connect('button_press_event',onclick)
