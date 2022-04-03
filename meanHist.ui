@@ -54,7 +54,7 @@
         </size>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a group of signals to plot, time range, then click Go!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a group of signals, time range, then click Go!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
@@ -215,7 +215,7 @@
        </property>
        <property name="commands" stdset="0">
         <stringlist>
-         <string>lclsarch &amp;</string>
+         <string>lclsarch </string>
         </stringlist>
        </property>
       </widget>

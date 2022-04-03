@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 # function to create the list of PV lists
 from createPVList import createPVList
+#for the clipboard
+from PyQt5.QtWidgets import QApplication
 
 class MyDisplay(Display):
   def __init__(self, parent=None, args=None, macros=None):
@@ -60,6 +62,10 @@ class MyDisplay(Display):
     # Connect go & print buttons to functions
     self.ui.GoButton.clicked.connect(self.Go)
     self.ui.printPushButton.clicked.connect(self.printPlot)
+
+    # Make clipboard to hold PV name - stolen from zack's CMIM
+    self.cb = QApplication.clipboard()
+    self.cb.clear(mode=self.cb.Selection)
 
     # empty the status text area
     self.ui.StatusLabel.setText("")
@@ -220,6 +226,10 @@ class MyDisplay(Display):
        # on the odd chance the click response is weird make sure 
        #  it's within the number of PVs we fetched
        if idx<len(pvl):
+         # put pvname onto clipboard
+         self.cb.setText(pvl[idx],mode=self.cb.Selection)
+
+         # get the data to plot
          timi=archiveData[pvl[idx]]["times"]
          valus=archiveData[pvl[idx]]["values"]
 
