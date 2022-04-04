@@ -221,11 +221,14 @@ class MyDisplay(Display):
        self.ax2.clear()
        self.ax2.grid()
        # get index (x position) of click
-       idx=round(event.xdata)
+       try:
+         idx=round(event.xdata)
+       except:
+         idx=None
 
        # on the odd chance the click response is weird make sure 
        #  it's within the number of PVs we fetched
-       if idx<len(pvl):
+       if idx!=None and idx<len(pvl):
          # put pvname onto clipboard
          self.cb.setText(pvl[idx],mode=self.cb.Selection)
 

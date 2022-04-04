@@ -202,5 +202,9 @@ def createPVList():
   juicyBits.append(1)
   yLabels.append('Heater Power (Watts)')
 
+  pvls.append(meme.names.list_pvs('CPV:%:3001:JT:POS_RBV'))
+  juicyBits.append(1)
+  yLabels.append('Valve Percentage Open (%)')
+
   return pvls, juicyBits, yLabels
 

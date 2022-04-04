@@ -24,7 +24,7 @@ TIMEDAYS=[1,3,4,7,0.05]
 PLOTS=['Insul Vac', 'Scav Vac', 'Cplr Vac', 'Beamline Vac', 'US HOMs', 
        'DS HOMs', 'STEPTEMPs', 'CPLRTEMP1s', 'CPLRTEMP2s', 'He Ves Temps',
        'Line A','Line B1','Line B2','Line C','Line D','Line E',
-       'Line F','Shield','Liquid Levels','CM Pressures','Cavity Heaters']
+       'Line F','Shield','Liquid Levels','CM Pressures','Cavity Heaters','JTs']
 # ==============================================================================
 # GETTERS
 # ==============================================================================
