@@ -103,8 +103,8 @@ class MyDisplay(Display):
 
     # time range requested?
     tidx = self.ui.TimeComboBox.currentIndex()
-    stoptime=datetime.datetime.now()
-    starttime=stoptime-datetime.timedelta(days=self.tdays[tidx])
+    self.stoptime=datetime.datetime.now()
+    self.starttime=self.stoptime-datetime.timedelta(days=self.tdays[tidx])
 
     # which set of pvs to plot (plot index)
     pidx = self.ui.SysComboBox.currentIndex()
@@ -124,7 +124,7 @@ class MyDisplay(Display):
       means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
                                                  self.ui.progressBar,
                                                  self.pvls[pidx],
-                                                 starttime,stoptime)
+                                                 self.starttime,self.stoptime)
     self.ui.progressBar.hide()
 
     # The program starts with axes set to ints so we can tell if
@@ -166,8 +166,13 @@ class MyDisplay(Display):
     # add a grid title, draw the canvas, and make sure the 
     #  printPushButton is showing
     self.ax.grid()
+    titletext=self.plots[pidx]+'    '
+    titletext += self.starttime.strftime('%Y-%b-%-d %-H:%M:%S')
+    emdash=u'\u2014'
+    titletext += ' {0} '.format(emdash)
+    titletext += self.stoptime.strftime('%Y-%b-%-d %-H:%M:%S')
 #    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
-    self.ax.set_title(self.plots[pidx],loc='left',fontsize='small')
+    self.ax.set_title(titletext,loc='left',fontsize='small')
 
     # <xTickShenanigans>
     # limit plot to only 5 ticks - need room for pv names

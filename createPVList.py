@@ -21,6 +21,15 @@ def createPVList():
   # Triple duty...
   #  Add ylabel for that plot type
 
+  # thoughts about how to sort the Hs between cm03 and cm04
+  # specials=['abc','def','ghi','jkl']
+  # to-be-sorted=['abc','ghi','xyz','qrs']
+  # temp2=set(to-be-sorted).difference(specials)
+  # sorted_cols = [a for a in specials if a in to-be-sorted} + sorted(list(temp2))
+  # sorted_cols=['abc','ghi','xyz','qrs']
+  # make specials be cm01, cm02, ch03, h1, and h2
+  # https://stackoverflow.com/questions/47158267/sort-list-and-force-certain-elements-to-be-first
+
   # Start with the vacuum lists
 
   #these will be lists of pvs for vac devices in the following systems:
@@ -205,6 +214,14 @@ def createPVList():
   pvls.append(meme.names.list_pvs('CPV:%:3001:JT:POS_RBV'))
   juicyBits.append(1)
   yLabels.append('Valve Percentage Open (%)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:2514:CD:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
+
+  pvls.append(meme.names.list_pvs('CTE:%:2515:CD:TEMP'))
+  juicyBits.append(1)
+  yLabels.append('Temperature ($^\circ$K)')
 
   return pvls, juicyBits, yLabels
 
