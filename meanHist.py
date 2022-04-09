@@ -15,14 +15,16 @@ import time
 from os import path, system, environ
 from pydm import Display
 import datetime
+
 # util functions for this class
 import meanHistUtil as util
+from makePlotz import makePlotz, PlotType
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-# function to create the list of PV lists
-from createPVList import createPVList
+
 #for the clipboard
 from PyQt5.QtWidgets import QApplication
 
@@ -30,10 +32,25 @@ class MyDisplay(Display):
   def __init__(self, parent=None, args=None, macros=None):
     super(MyDisplay, self).__init__(parent=parent, args=args, macros=macros)
 
+    # need to be on a machine on the mccdmz to use meme.names & get
+    #  archiver data
+    caAddrList=environ['EPICS_CA_ADDR_LIST']
+    if 'mcc-dmz' not in caAddrList:
+      print('Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc)')
+      self.ui.StatusLabel.setStyleSheet("color: red;")
+      self.ui.StatusLabel.setText("Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc")
+
+      # set the list of pv lists for the types of plots
+      self.plotz=[]
+    else:
+      # get the list of pv lists for the types of plots and which 
+      #  part(s) of the pv name to use for x tick labels
+      self.plotz = makePlotz()
+
     # Get variables from utility file
-    self.tranges = util.timeranges()
-    self.tdays = util.timedays()
-    self.plots = util.plots()
+    self.tranges = util.TIMERANGES
+    self.tdays = util.TIMEDAYS
+
 
     # initialize matplotlib click connections
     self.ax=0
@@ -47,8 +64,8 @@ class MyDisplay(Display):
     self.ui.progressBar.setValue(0)
 
     # system-to-plot selector
-    for plotsys in self.plots:
-      self.ui.SysComboBox.addItem(plotsys)
+    for plotsys in self.plotz:
+      self.ui.SysComboBox.addItem(plotsys.name)
 
     # time range selector
     for trange in self.tranges:
@@ -74,21 +91,6 @@ class MyDisplay(Display):
     self.ui.progressBar.hide()
 #    self.ui.printPushButton.hide()
 
-    # need to be on a machine on the mccdmz to use meme.names & get
-    #  archiver data
-    caAddrList=environ['EPICS_CA_ADDR_LIST']
-    if 'mcc-dmz' not in caAddrList:
-      print('Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc)')
-      self.ui.StatusLabel.setStyleSheet("color: red;")
-      self.ui.StatusLabel.setText("Need to be on an mccdmz machine (srv01, mcclogin, lcls-prod02, etc")
-
-      # set the list of pv lists for the types of plots
-      self.pvls=[]
-    else:
-      # get the list of pv lists for the types of plots and which 
-      #  part(s) of the pv name to use for x tick labels
-      self.pvls,self.juicyBits,self.yLabels=createPVList()
-
   def printPlot(self):
     self.figure.savefig('meanHist.ps')
     cmd='lpr -Pphysics-lcls2log meanHist.ps'
@@ -101,30 +103,32 @@ class MyDisplay(Display):
   #  and responds to mouse click in top plot to draw bottom plot
   #  with that dot's data (that went into calculating the mean & std
 
-    # time range requested?
-    tidx = self.ui.TimeComboBox.currentIndex()
-    self.stoptime=datetime.datetime.now()
-    self.starttime=self.stoptime-datetime.timedelta(days=self.tdays[tidx])
-
     # which set of pvs to plot (plot index)
     pidx = self.ui.SysComboBox.currentIndex()
+
+    # time range requested?
+    tidx = self.ui.TimeComboBox.currentIndex()
+    self.plotz[pidx].stoptime=datetime.datetime.now()
+    self.plotz[pidx].starttime=self.plotz[pidx].stoptime-datetime.timedelta(days=self.tdays[tidx])
 
     # if on a dmz machine, get the data - pass in statuslabel to 
     #  pass messages, progress bar to show progress, list of pvs to get,
     #  and start/stop times for fetching the data
 
     # Not on a dmz machine
-    if self.pvls==[]:
-      means=[]
-      stds=[]
-      pvl=[]
-      archiveData=[]
+    if self.plotz==[]:
+      self.plotz[pidx].means=[]
+      self.plotz[pidx].stds=[]
+      self.plotz[pidx].pvList=[]
+      self.plotz[pidx].archiveData=[]
     # Yay! dmz machine!
     else:
-      means, stds, pvl, archiveData=util.getData(self.ui.StatusLabel,
+      (self.plotz[pidx].means, self.plotz[pidx].stds, 
+        self.plotz[pidx].pvList, self.plotz[pidx].archiveData) = util.getData(self.ui.StatusLabel,
                                                  self.ui.progressBar,
-                                                 self.pvls[pidx],
-                                                 self.starttime,self.stoptime)
+                                                 self.plotz[pidx].pvList,
+                                                 self.plotz[pidx].starttime,
+                                                 self.plotz[pidx].stoptime)
     self.ui.progressBar.hide()
 
     # The program starts with axes set to ints so we can tell if
@@ -144,7 +148,7 @@ class MyDisplay(Display):
 
     # if get data fails, it sends back and empty means array - usually means
     #  user is not a machine with access to the archiver, thus the error message
-    if means==[]:
+    if self.plotz[pidx].means==[]:
       print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, etc')
       errmsg='Use on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...'
       self.ax.set_title(errmsg,loc='left',y=.85,x=.02,fontsize='small')
@@ -152,25 +156,26 @@ class MyDisplay(Display):
       self.canvas.draw()
       return
     # plot means & stds
-    self.ax.errorbar(range(len(means)),means,yerr=stds,
-                ls='none',ecolor='black',elinewidth=0.5)
+    self.ax.errorbar(range(len(self.plotz[pidx].means)),self.plotz[pidx].means,
+                     yerr=self.plotz[pidx].stds,ls='none',ecolor='black',
+                     elinewidth=0.5)
 
     # the first 4 plots-types are vacuum so use semilog to plot the means
     #  otherwise just straight up plot
     if pidx<4:
-      self.ax.semilogy(means,'o',color='tab:blue')
+      self.ax.semilogy(self.plotz[pidx].means,'o',color='tab:blue')
     else:
-      self.ax.plot(means,'o',color='tab:blue')
+      self.ax.plot(self.plotz[pidx].means,'o',color='tab:blue')
     #  Other color choices matplotlib.org/3.5.0/gallery/color/named_colors.html
 
     # add a grid title, draw the canvas, and make sure the 
     #  printPushButton is showing
     self.ax.grid()
-    titletext=self.plots[pidx]+'    '
-    titletext += self.starttime.strftime('%Y-%b-%-d %-H:%M:%S')
+    titletext=self.plotz[pidx].name+'    '
+    titletext += self.plotz[pidx].starttime.strftime('%Y-%b-%-d %-H:%M:%S')
     emdash=u'\u2014'
     titletext += ' {0} '.format(emdash)
-    titletext += self.stoptime.strftime('%Y-%b-%-d %-H:%M:%S')
+    titletext += self.plotz[pidx].stoptime.strftime('%Y-%b-%-d %-H:%M:%S')
 #    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
     self.ax.set_title(titletext,loc='left',fontsize='small')
 
@@ -188,15 +193,15 @@ class MyDisplay(Display):
     xTickLabels=[]
     for val in tickSpots[1:-1]:
       if val.is_integer():
-        if int(val)<len(self.pvls[pidx]):
-          if self.juicyBits[pidx]==2:
+        if int(val)<len(self.plotz[pidx].pvList):
+          if self.plotz[pidx].xLabelPart==2:
             # get the two middle chunks of pv name
-            pvnParts=self.pvls[pidx][int(val)].split(':')[1:3]
+            pvnParts=self.plotz[pidx].pvList[int(val)].split(':')[1:3]
             # rejoin them with a : if there's more than one
             pvn=':'.join(pvnParts)
           else:
             # use just the 2nd chunk (juicyBits[pidx] should ==1
-            pvn=self.pvls[pidx][int(val)].split(':')[1]
+            pvn=self.plotz[pidx].pvList[int(val)].split(':')[1]
           xTickLabels.append(pvn)
         else:
           print('valstr {}'.format(val))
@@ -211,7 +216,7 @@ class MyDisplay(Display):
     #</xTickShenanigans>
 
     # set y axis labels too
-    self.ax.set_ylabel(self.yLabels[pidx])
+    self.ax.set_ylabel(self.plotz[pidx].yLabel)
 
     self.canvas.draw()
     self.ui.printPushButton.show()
@@ -233,13 +238,13 @@ class MyDisplay(Display):
 
        # on the odd chance the click response is weird make sure 
        #  it's within the number of PVs we fetched
-       if idx!=None and idx<len(pvl):
+       if idx!=None and idx<len(self.plotz[pidx].pvList):
          # put pvname onto clipboard
-         self.cb.setText(pvl[idx],mode=self.cb.Selection)
+         self.cb.setText(self.plotz[pidx].pvList[idx],mode=self.cb.Selection)
 
          # get the data to plot
-         timi=archiveData[pvl[idx]]["times"]
-         valus=archiveData[pvl[idx]]["values"]
+         timi=self.plotz[pidx].archiveData[self.plotz[pidx].pvList[idx]]["times"]
+         valus=self.plotz[pidx].archiveData[self.plotz[pidx].pvList[idx]]["values"]
 
          # yes we want to plot this vacuum data if there's more than 
          #  one positive value find number of positive points
@@ -260,7 +265,7 @@ class MyDisplay(Display):
            dataPlotted=1
 
          # set x label as pv name
-         xlabelt=pvl[idx]
+         xlabelt=self.plotz[pidx].pvList[idx]
 #           self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
          self.ax2.set_xlabel(xlabelt,fontsize='small')
 
@@ -270,7 +275,7 @@ class MyDisplay(Display):
              mdates.ConciseDateFormatter(self.ax2.xaxis.get_major_locator()))
 
          # set y axis labels too
-         self.ax2.set_ylabel(self.yLabels[pidx])
+         self.ax2.set_ylabel(self.plotz[pidx].yLabel)
 
          self.canvas.draw()
 

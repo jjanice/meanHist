@@ -17,22 +17,8 @@ from lcls_tools.data_analysis.archiver import Archiver, ArchiverData
 # GLOBAL CONFIGURATION
 # ==============================================================================
 
-#TIMERANGES=["last24h","last3days","last4days","last7days","last2weeks","lastmonth"]
-#TIMEDAYS=[1 3 4 7 14 30]
 TIMERANGES=["last24h","last3days","last4days","last7days","last1h"]
 TIMEDAYS=[1,3,4,7,0.05]
-PLOTS=['Insul Vac', 'Scav Vac', 'Cplr Vac', 'Beamline Vac', 'US HOMs', 
-       'DS HOMs', 'STEPTEMPs', 'CPLRTEMP1s', 'CPLRTEMP2s', 'He Ves Temps',
-       'Line A','Line B1','Line B2','Line C','Line D','Line E',
-       'Line F','Shield','Liquid Levels','CM Pressures','Cavity Heaters','JTs',
-       'CD Line 1','CD Line 2']
-# ==============================================================================
-# GETTERS
-# ==============================================================================
-
-def timeranges(): return TIMERANGES
-def timedays(): return TIMEDAYS
-def plots(): return PLOTS
 
 def getData(statusLabel, progressBar, pvl, starttime, stoptime):
   # inputs Qlabel to write status to, list of PVs to fetch, 
