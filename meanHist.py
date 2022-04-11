@@ -123,12 +123,10 @@ class MyDisplay(Display):
       self.plotz[pidx].archiveData=[]
     # Yay! dmz machine!
     else:
-      (self.plotz[pidx].means, self.plotz[pidx].stds, 
-        self.plotz[pidx].pvList, self.plotz[pidx].archiveData) = util.getData(self.ui.StatusLabel,
-                                                 self.ui.progressBar,
-                                                 self.plotz[pidx].pvList,
-                                                 self.plotz[pidx].starttime,
-                                                 self.plotz[pidx].stoptime)
+      if self.plotz[pidx].getData:
+        (self.plotz[pidx]) = util.getData(self.ui.StatusLabel,
+                                        self.ui.progressBar,
+                                        self.plotz[pidx])
     self.ui.progressBar.hide()
 
     # The program starts with axes set to ints so we can tell if
@@ -176,7 +174,6 @@ class MyDisplay(Display):
     emdash=u'\u2014'
     titletext += ' {0} '.format(emdash)
     titletext += self.plotz[pidx].stoptime.strftime('%Y-%b-%-d %-H:%M:%S')
-#    self.ax.set_title(self.plots[pidx],loc='left',y=.85,x=.02,fontsize='small')
     self.ax.set_title(titletext,loc='left',fontsize='small')
 
     # <xTickShenanigans>
@@ -186,10 +183,6 @@ class MyDisplay(Display):
     tickSpots=self.ax.get_xticks().tolist()
     # try to silence a warning, skip first and last
     self.ax.xaxis.set_ticks(tickSpots[1:-1])
-    # ignore the first and last, for the ones in between check that the value
-    #  is an int, and if it's less than length of pvlist, use middle two
-    #   chunks of PV name as label
-#    xTickLabels=['']
     xTickLabels=[]
     for val in tickSpots[1:-1]:
       if val.is_integer():
@@ -200,17 +193,15 @@ class MyDisplay(Display):
             # rejoin them with a : if there's more than one
             pvn=':'.join(pvnParts)
           else:
-            # use just the 2nd chunk (juicyBits[pidx] should ==1
+            # use just the 2nd chunk (plotz.xLabelPart should be 1
             pvn=self.plotz[pidx].pvList[int(val)].split(':')[1]
           xTickLabels.append(pvn)
         else:
-          print('valstr {}'.format(val))
+#          print('valstr {}'.format(val))
           xTickLabels.append('')
       else:
-        print('valstr {}'.format(val))
+#        print('valstr {}'.format(val))
         xTickLabels.append('')
-    # don't forget to set the last one to '' too
-#    xTickLabels.append('')
     # actually set the xticklabels now
     self.ax.set_xticklabels(xTickLabels)
     #</xTickShenanigans>
@@ -266,7 +257,6 @@ class MyDisplay(Display):
 
          # set x label as pv name
          xlabelt=self.plotz[pidx].pvList[idx]
-#           self.ax2.set_title(titlet,loc='left',y=.85,x=.02,fontsize='small')
          self.ax2.set_xlabel(xlabelt,fontsize='small')
 
          if dataPlotted:
@@ -288,7 +278,14 @@ class MyDisplay(Display):
     pass
 
   def ChangeSys(self):
-#    print("changeSys")
+  #
+  # If we already have data for a given system, show it
+  #
+    pidx = self.ui.SysComboBox.currentIndex()
+    if len(self.plotz[pidx].means)>0:
+      self.plotz[pidx].getData=False
+      self.Go()
+      self.plotz[pidx].getData=True
     pass
 
   def ui_filename(self):

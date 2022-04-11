@@ -4,8 +4,18 @@ import meme.names
 
 class PlotType:
   def __init__(self,name,pvList=None,xLabelPart=1,yLabel='',starttime=None,
-               stoptime=None,means=None,stds=None,archiveData=None):
-    # instance variable
+               stoptime=None,means=None,stds=None,archiveData=None,getData=True):
+    # name is the name of the group of PVs
+    # pvList is the list of PVs
+    # xLabelPart is whether to show CMxx or LxB:MMcc
+    # yLabel is the label for the y axis
+    # starttime is the start time for the archiver data fetch
+    # stoptime is the stop time for the archiver data fetch
+    # means is the list of the mean of each PV's archiver data
+    # stds is the list of the std dev of each PV's archiver data
+    # archiveData is the dict of the archiveData that was fetched
+    # getData is a flag to request a new fetch from the archiver (True) or show old data
+
     self.name = name
     if pvList is None:
       pvList=[]
@@ -23,6 +33,7 @@ class PlotType:
     if archiveData is None:
       archiveData={}
     self.archiveData = archiveData
+    self.getData = getData
 
 def makePlotz():
   caAddrList=os.environ['EPICS_CA_ADDR_LIST']
