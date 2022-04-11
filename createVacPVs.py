@@ -1,7 +1,7 @@
 import os
 import meme.names
 
-def createPVList():
+def createVacPVs():
   # creates a list of lists - each smaller one is a list of PVs for 
   # a given requested plot like insulating vacuum, Line A temps, etc.
   # The big list is in order of the pulldown on the GUI.
@@ -125,103 +125,5 @@ def createPVList():
       else:
         pvbl.append(pv)
 
-  # Packup return variables
-  pvls.append(pvins)
-  juicyBits.append(2)
-  yLabels.append('Pressure (Torr)')
-
-  pvls.append(pvscav)
-  juicyBits.append(2)
-  yLabels.append('Pressure (Torr)')
-
-  pvls.append(pvcplr)
-  juicyBits.append(2)
-  yLabels.append('Pressure (Torr)')
-
-  pvls.append(pvbl)
-  juicyBits.append(2)
-  yLabels.append('Pressure (Torr)')
-
-# CRYO - so much easier than vacuum...
-  pvls.append(meme.names.list_pvs('CTE:%:UH:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:DH:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('ACCL:%:%:STEPTEMP'))
-  juicyBits.append(2)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP1'))
-  juicyBits.append(2)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('ACCL:%:%:CPLRTEMP2'))
-  juicyBits.append(2)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:V%:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:A1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:B1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:B2:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:C1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:D1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:E1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:F1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:%:S1:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CLL:CM%:%:%:LVL'))
-  juicyBits.append(1)
-  yLabels.append('Liquid Level (%)')
-
-  pvls.append(meme.names.list_pvs('CPT:CM%:%:%S:PRESS'))
-  juicyBits.append(1)
-  yLabels.append('Two-phase line pressure (bara)')
-
-  pvls.append(meme.names.list_pvs('CHTR:%:%:HV:POWER_RBV'))
-  juicyBits.append(1)
-  yLabels.append('Heater Power (Watts)')
-
-  pvls.append(meme.names.list_pvs('CPV:%:3001:JT:POS_RBV'))
-  juicyBits.append(1)
-  yLabels.append('Valve Percentage Open (%)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:2514:CD:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  pvls.append(meme.names.list_pvs('CTE:%:2515:CD:TEMP'))
-  juicyBits.append(1)
-  yLabels.append('Temperature ($^\circ$K)')
-
-  return pvls, juicyBits, yLabels
+  return pvins,pvscav,pvcplr,pvbl
 
