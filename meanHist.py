@@ -15,6 +15,7 @@ import time
 from os import path, system, environ
 from pydm import Display
 import datetime
+import physicselog
 
 # util functions for this class
 import meanHistUtil as util
@@ -92,9 +93,14 @@ class MyDisplay(Display):
 #    self.ui.printPushButton.hide()
 
   def printPlot(self):
-    self.figure.savefig('meanHist.ps')
-    cmd='lpr -Pphysics-lcls2log meanHist.ps'
-    system(cmd)
+    self.figure.savefig('/home/physics/jnelson/gitRepos/meanHist/meanHist.ps')
+    physicselog.submit_entry("lcls2","jnelson","Testing please ignore.",
+       "Another test of making entries from python...",
+       "/home/physics/jnelson/gitRepos/meanHist/meanHist.ps")
+#    physicselog.submit_entry("lcls2","jnelson","History Plot",None,
+#                              "meanHist.ps",None)
+#    cmd='lpr -Pphysics-lcls2log meanHist.ps'
+#    system(cmd)
 
   def Go(self):
   # function to respond to go button push
