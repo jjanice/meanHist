@@ -93,12 +93,14 @@ class MyDisplay(Display):
 #    self.ui.printPushButton.hide()
 
   def printPlot(self):
-    self.figure.savefig('/home/physics/jnelson/gitRepos/meanHist/meanHist.ps')
-    physicselog.submit_entry("lcls2","jnelson","Testing please ignore.",
-       "Another test of making entries from python...",
-       "/home/physics/jnelson/gitRepos/meanHist/meanHist.ps")
-#    physicselog.submit_entry("lcls2","jnelson","History Plot",None,
-#                              "meanHist.ps",None)
+    self.figure.savefig('/tmp/meanHist.ps')
+# testing code
+#    physicselog.submit_entry("lcls2","jnelson","Testing please ignore.",
+#       "Another test of making entries from python...",
+#       "/home/physics/jnelson/gitRepos/meanHist/meanHist.ps")
+    physicselog.submit_entry("lcls2","jnelson","History Plot",None,
+                             "/tmp/meanHist.ps",None)
+# old method
 #    cmd='lpr -Pphysics-lcls2log meanHist.ps'
 #    system(cmd)
 
