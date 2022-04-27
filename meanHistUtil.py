@@ -7,6 +7,11 @@ Some stolen from CMIM's Utility.py - thanks, Zack!
 Also getData which returns means, stds, and archive data for a selected group of signals
 J Nelson 2 April 2022
 ================================================================================
+Mods:
+20 Apr 2022 J Nelson
+  added kludge to check if pv fetched from archiver is ds:press to divide
+    the returned values by 1000 to convert mbara to bara with apologies.
+
 """
 import numpy as np
 import datetime
@@ -56,7 +61,11 @@ def getData(statusLabel, progressBar, plotz):
                                               plotz.starttime,
                                               plotz.stoptime)
       result={"times":[],"values":[]}
-      result["values"]=onedata.values[pv]
+      if 'DS:PRESS' in pv:
+        scaleFactor=.001
+        result["values"]=[value*scaleFactor for value in onedata.values[pv]]
+      else:
+        result["values"]=onedata.values[pv]
       result["times"]=onedata.timeStamps[pv]
       results[pv]=result
       progressBar.setValue(round(100*id/len(plotz.pvList)))
