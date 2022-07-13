@@ -153,7 +153,8 @@ class MyDisplay(Display):
     self.ax.clear()
 
     # if get data fails, it sends back and empty means array - usually means
-    #  user is not a machine with access to the archiver, thus the error message
+    #  user is not on a machine with access to the archiver, 
+    #  thus the error message
     if self.plotz[pidx].means==[]:
       print('Need to be on an mccdmz machine: srv01, mcclogin, lcls-prod02, etc')
       errmsg='Use on an mccdmz machine: srv01, mcclogin, lcls-prod02, ...'
@@ -200,6 +201,9 @@ class MyDisplay(Display):
             pvnParts=self.plotz[pidx].pvList[int(val)].split(':')[1:3]
             # rejoin them with a : if there's more than one
             pvn=':'.join(pvnParts)
+          elif self.plotz[pidx].xLabelPart==4:
+            #Use the fourth part of the PV
+            pvn=self.plotz[pidx].pvList[int(val)].split(':')[3]
           else:
             # use just the 2nd chunk (plotz.xLabelPart should be 1
             pvn=self.plotz[pidx].pvList[int(val)].split(':')[1]

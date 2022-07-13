@@ -179,4 +179,16 @@ def makePlotz():
                       xLabelPart=1,
                       yLabel='Temperature ($^\circ$K)'))
 
+  pvl=meme.names.list_pvs('RADM:SYS0:100:%:GAMMAAVE')
+  Plotz.append(PlotType(name='Decarad 1 Aves',
+                      pvList=pvl,
+                      xLabelPart=4,
+                      yLabel='Dose Rate (mR/hr)'))
+
+  pvl=meme.names.list_pvs('RADM:SYS0:200:%:GAMMAAVE')
+  Plotz.append(PlotType(name='Decarad 2 Aves',
+                      pvList=pvl,
+                      xLabelPart=4,
+                      yLabel='Dose Rate (mR/hr)'))
+
   return Plotz
