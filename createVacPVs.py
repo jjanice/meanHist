@@ -125,5 +125,6 @@ def createVacPVs():
       else:
         pvbl.append(pv)
 
+  # print(pvbl)
   return pvins,pvscav,pvcplr,pvbl
 
