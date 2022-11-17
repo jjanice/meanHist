@@ -155,8 +155,14 @@ def makePlotz():
                       xLabelPart=1,
                       yLabel='Liquid Level (%)'))
 
-  pvl=meme.names.list_pvs('CPT:CM%:%:%S:PRESS')
-  Plotz.append(PlotType(name='CM Pressures',
+  pvl=meme.names.list_pvs('CPT:CM%:%:DS:PRESS')
+  Plotz.append(PlotType(name='CM DS Pressures',
+                      pvList=pvl,
+                      xLabelPart=1,
+                      yLabel='Two-phase line pressure (bara)'))
+
+  pvl=meme.names.list_pvs('CPT:CM%:%:US:PRESS')
+  Plotz.append(PlotType(name='CM US Pressures',
                       pvList=pvl,
                       xLabelPart=1,
                       yLabel='Two-phase line pressure (bara)'))

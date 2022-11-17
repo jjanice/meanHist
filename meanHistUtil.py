@@ -16,7 +16,7 @@ Mods:
 import numpy as np
 import datetime
 import matplotlib.dates as mdates
-from lcls_tools.data_analysis.archiver import Archiver, ArchiverData
+from lcls_tools.common.data_analysis.archiver import Archiver, ArchiverData
 
 # ==============================================================================
 # GLOBAL CONFIGURATION
